@@ -9,15 +9,87 @@
 #define ResultGreen	1
 #define ResultYellow	2
 #define ResultRed	4
-
+#define max		1379
 
 typedef char Result;
+
+struct s_words {
+	char **arr;
+	int n;
+};
+
+typedef struct s_words Words;
 
 Result *cw(char*, char*);
 Result cc(char, int, char*);
 bool isin(char, char*);
 void Example_print_result(Result*);
 int main(int,char**);
+Words readfile(char*);
+
+/*
+ * Read wordlist file into 2D array
+*/
+Words readfile(char *filename){
+	char buf[8];
+	int i, size;
+	FILE *fd;
+	
+	// Dynamic memory allocation
+	static char ret[max][5];
+	
+
+	fd = fopen(filename, "r");
+	if(!fd){
+		perror("fopen");
+		Words words = {
+			.arr = (char **)0,
+			.n = 0
+		};
+		return words;
+	}
+	
+	// Clean out buffer
+	i = 0;
+	memset(buf, 0, 8);
+	while(fgets(buf, 7, fd)){
+		size = strlen(buf);
+		
+		if(size < 1){
+			memset(buf, 0, 8);
+			continue;
+		}
+		// Example: speed\n\0
+		// We need to remove \n
+		// strlen() => 6
+		size--; // Decrement to exclude \n
+		buf[size] = 0;
+		if(size != 5){
+			memset(buf,0,8);
+			continue;
+		}
+		
+		ret[i][0] = buf[0];
+		ret[i][1] = buf[1];
+		ret[i][2] = buf[2];
+		ret[i][3] = buf[3];
+		ret[i][4] = buf[4];
+		
+		memset(buf, 0, 8);
+		i++;
+
+		if(max <= i){
+			break;
+		}
+	}
+	fclose(fd);
+	Words words = {
+		.arr = (char **)&ret,
+		.n = i
+	};
+	
+	return words;
+}
 
 bool isin(char c, char* w){
 	int i, size;
@@ -43,19 +115,21 @@ Result cc(char guess, int idx, char* word){
 	return ResultRed;
 }
 
-Result *cw(char* guess, char* word){
+Result *cw(char* guess, char* word){	
+	int i, size;
+	size = strlen(word);
 	static Result res[5];
-	int i;
 
-	for(i=0; i<5; i++){
+	for(i=0; i<size; i++){
 		res[i] = cc(guess[i], i, word);
 	}
 	return res;
 }
 
 void Example_print_result(Result *res){
-	int i;
-	for(i=0; i<5; i++){
+	int i, size;
+	size = strlen(res);
+	for(i=0; i<size; i++){
 		switch(res[i]){
 			case ResultGreen:
 				printf("%s\n", "Green");
